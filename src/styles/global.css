@@ -127,7 +127,8 @@ th {
 }
 
 .album-form,
-.table-area {
+.table-area,
+.settings-area {
   border: 1px solid #ddd5c9;
   border-radius: 8px;
   background: #ffffff;
@@ -161,6 +162,39 @@ th {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+}
+
+.settings-area {
+  display: grid;
+  gap: 16px;
+}
+
+.settings-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.settings-card {
+  border: 1px solid #e4ded4;
+  border-radius: 6px;
+  background: #fffefa;
+  display: grid;
+  gap: 6px;
+  padding: 12px;
+}
+
+.settings-card span {
+  color: #706b64;
+  font-size: 0.76rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.settings-card strong {
+  color: #1d1d1f;
+  font-size: 0.95rem;
+  overflow-wrap: anywhere;
 }
 
 .visually-hidden {
@@ -350,8 +384,13 @@ th {
   }
 
   .album-form,
-  .table-area {
+  .table-area,
+  .settings-area {
     padding: 14px;
+  }
+
+  .settings-grid {
+    grid-template-columns: 1fr;
   }
 
   .form-heading {

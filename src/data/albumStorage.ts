@@ -1,6 +1,6 @@
 import type { Album } from "../types/album";
 
-const STORAGE_KEY = "hip-hop-album-ranker:albums";
+export const STORAGE_KEY = "hip-hop-album-ranker:albums";
 
 export function loadAlbums(): Album[] {
   const savedAlbums = window.localStorage.getItem(STORAGE_KEY);

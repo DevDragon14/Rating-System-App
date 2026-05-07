@@ -4,6 +4,7 @@ import { AlbumForm } from "./components/AlbumForm";
 import { AlbumTable } from "./components/AlbumTable";
 import { ImportExportControls } from "./components/ImportExportControls";
 import { SearchAndSort } from "./components/SearchAndSort";
+import { SettingsPanel } from "./components/SettingsPanel";
 import type {
   Album,
   FavoriteFilter,
@@ -13,7 +14,7 @@ import type {
 } from "./types/album";
 import { calculateOverallRating, calculateSongRating } from "./utils/scoring";
 
-type Page = "library" | "rankings" | "queue";
+type Page = "library" | "rankings" | "queue" | "settings";
 
 function App() {
   const [albums, setAlbums] = useState<Album[]>(() => loadAlbums());
@@ -185,48 +186,55 @@ function App() {
           <button className={activePage === "queue" ? "active" : ""} onClick={() => setActivePage("queue")}>
             Queue
           </button>
+          <button className={activePage === "settings" ? "active" : ""} onClick={() => setActivePage("settings")}>
+            Settings
+          </button>
         </nav>
       </header>
 
-      <section className="workspace">
-        <div ref={formAreaRef}>
-          <AlbumForm
-            album={editingAlbum}
-            onCancelEdit={() => setEditingAlbumId(null)}
-            onSave={saveAlbum}
-          />
-        </div>
+      {activePage === "settings" ? (
+        <SettingsPanel albums={albums} />
+      ) : (
+        <section className="workspace">
+          <div ref={formAreaRef}>
+            <AlbumForm
+              album={editingAlbum}
+              onCancelEdit={() => setEditingAlbumId(null)}
+              onSave={saveAlbum}
+            />
+          </div>
 
-        <section className="table-area">
-          <ImportExportControls
-            albums={albums}
-            onClearLibrary={clearLibrary}
-            onImport={importAlbums}
-          />
-          <SearchAndSort
-            searchText={searchText}
-            sortKey={sortKey}
-            statusFilter={statusFilter}
-            favoriteFilter={favoriteFilter}
-            albumYearFilter={albumYearFilter}
-            reviewYearFilter={reviewYearFilter}
-            albumYears={albumYears}
-            reviewYears={reviewYears}
-            onSearchChange={setSearchText}
-            onSortChange={setSortKey}
-            onStatusFilterChange={setStatusFilter}
-            onFavoriteFilterChange={setFavoriteFilter}
-            onAlbumYearFilterChange={setAlbumYearFilter}
-            onReviewYearFilterChange={setReviewYearFilter}
-          />
-          <AlbumTable
-            albums={visibleAlbums}
-            emptyMessage={getEmptyMessage(activePage)}
-            onDelete={deleteAlbum}
-            onEdit={editAlbum}
-          />
+          <section className="table-area">
+            <ImportExportControls
+              albums={albums}
+              onClearLibrary={clearLibrary}
+              onImport={importAlbums}
+            />
+            <SearchAndSort
+              searchText={searchText}
+              sortKey={sortKey}
+              statusFilter={statusFilter}
+              favoriteFilter={favoriteFilter}
+              albumYearFilter={albumYearFilter}
+              reviewYearFilter={reviewYearFilter}
+              albumYears={albumYears}
+              reviewYears={reviewYears}
+              onSearchChange={setSearchText}
+              onSortChange={setSortKey}
+              onStatusFilterChange={setStatusFilter}
+              onFavoriteFilterChange={setFavoriteFilter}
+              onAlbumYearFilterChange={setAlbumYearFilter}
+              onReviewYearFilterChange={setReviewYearFilter}
+            />
+            <AlbumTable
+              albums={visibleAlbums}
+              emptyMessage={getEmptyMessage(activePage)}
+              onDelete={deleteAlbum}
+              onEdit={editAlbum}
+            />
+          </section>
         </section>
-      </section>
+      )}
     </main>
   );
 }
