@@ -239,6 +239,13 @@ th {
   color: #706b64;
 }
 
+.field-note {
+  color: #706b64;
+  font-size: 0.78rem;
+  font-weight: 500;
+  line-height: 1.35;
+}
+
 .error-message {
   border-left: 4px solid #b4482d;
   background: #fff1ec;

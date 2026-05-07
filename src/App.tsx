@@ -160,7 +160,7 @@ function numericSort(first: number | "", second: number | ""): number {
 
 function getEmptyMessage(activePage: Page): string {
   if (activePage === "rankings") {
-    return "No reviewed albums yet. Finish a review to see it ranked here.";
+    return "No reviewed albums yet. Rankings only show albums marked Reviewed.";
   }
 
   if (activePage === "queue") {

@@ -28,6 +28,7 @@ export function AlbumForm({ album, onCancelEdit, onSave }: AlbumFormProps) {
   const [formValues, setFormValues] = useState<AlbumFormValues>(blankForm);
   const [tracks, setTracks] = useState<TrackFormValues[]>([]);
   const [errorMessage, setErrorMessage] = useState("");
+  const canMarkReviewed = isReviewComplete(formValues, tracks);
 
   useEffect(() => {
     if (!album) {
@@ -122,6 +123,18 @@ export function AlbumForm({ album, onCancelEdit, onSave }: AlbumFormProps) {
     }
 
     const cleanedTracks = parsedTracks as TrackRating[];
+
+    if (
+      formValues.status === "Reviewed" &&
+      (gutRating === "" ||
+        consistencyRating === "" ||
+        !cleanedTracks.some((track) => !track.skipped && typeof track.rating === "number"))
+    ) {
+      setErrorMessage(
+        "Reviewed albums need Gut, Consistency, and at least one rated track.",
+      );
+      return;
+    }
 
     const now = new Date().toISOString();
 
@@ -222,8 +235,15 @@ export function AlbumForm({ album, onCancelEdit, onSave }: AlbumFormProps) {
           >
             <option value="Planned">Planned</option>
             <option value="In Progress">In Progress</option>
-            <option value="Reviewed">Reviewed</option>
+            <option value="Reviewed" disabled={!canMarkReviewed}>
+              Reviewed
+            </option>
           </select>
+          {!canMarkReviewed && (
+            <span className="field-note">
+              Add Gut, Consistency, and at least one rated track to mark reviewed.
+            </span>
+          )}
         </label>
 
         <label>
@@ -353,6 +373,24 @@ function parseOptionalWholeNumber(value: string): number | "" {
   }
 
   return Math.max(0, Math.floor(parsedNumber));
+}
+
+function isReviewComplete(
+  formValues: AlbumFormValues,
+  tracks: TrackFormValues[],
+): boolean {
+  const gutRating = parseOptionalRating(formValues.gutRating);
+  const consistencyRating = parseOptionalRating(formValues.consistencyRating);
+  const hasRatedTrack = tracks.some((track) => {
+    const rating = parseOptionalRating(track.rating);
+    return !track.skipped && typeof rating === "number";
+  });
+
+  return (
+    typeof gutRating === "number" &&
+    typeof consistencyRating === "number" &&
+    hasRatedTrack
+  );
 }
 
 function createId(): string {
