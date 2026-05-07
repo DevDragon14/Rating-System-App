@@ -283,6 +283,11 @@ th {
   overflow-x: auto;
 }
 
+.mobile-list-controls,
+.mobile-card-toggle {
+  display: none;
+}
+
 .score {
   font-weight: 800;
 }
@@ -346,6 +351,19 @@ th {
 }
 
 @media (max-width: 760px) {
+  .mobile-list-controls {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 10px;
+  }
+
+  .mobile-card-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 32px;
+  }
+
   table,
   thead,
   tbody,
@@ -366,7 +384,7 @@ th {
 
   tbody {
     display: grid;
-    gap: 12px;
+    gap: 10px;
   }
 
   tr {
@@ -408,10 +426,16 @@ th {
     color: #fffefa;
     font-size: 0.95rem;
     font-weight: 800;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
   }
 
   .rank-cell::before {
     color: #d8d2c8;
+  }
+
+  .rank-value {
+    font-size: 1rem;
   }
 
   .artist-cell {
@@ -432,6 +456,16 @@ th {
 
   .overall-cell {
     background: #f3ede1;
+  }
+
+  .album-row:not(.is-expanded) .meta-cell,
+  .album-row:not(.is-expanded) .score-cell:not(.overall-cell),
+  .album-row:not(.is-expanded) .actions-cell {
+    display: none;
+  }
+
+  .album-row:not(.is-expanded) .overall-cell {
+    grid-column: 1 / -1;
   }
 
   .meta-cell,
