@@ -76,12 +76,27 @@ export function AlbumForm({ album, onCancelEdit, onSave }: AlbumFormProps) {
     }));
   }
 
+  function updateRatingField(
+    field: "gutRating" | "consistencyRating",
+    value: string,
+  ) {
+    if (isAllowedRatingInput(value)) {
+      updateField(field, value);
+    }
+  }
+
   function updateTrack(trackId: string, updates: Partial<TrackFormValues>) {
     setTracks((currentTracks) =>
       currentTracks.map((track) =>
         track.id === trackId ? { ...track, ...updates } : track,
       ),
     );
+  }
+
+  function updateTrackRating(trackId: string, value: string) {
+    if (isAllowedRatingInput(value)) {
+      updateTrack(trackId, { rating: value });
+    }
   }
 
   function addTrack() {
@@ -265,7 +280,9 @@ export function AlbumForm({ album, onCancelEdit, onSave }: AlbumFormProps) {
           <input
             inputMode="decimal"
             value={formValues.gutRating}
-            onChange={(event) => updateField("gutRating", event.target.value)}
+            onChange={(event) =>
+              updateRatingField("gutRating", event.target.value)
+            }
             placeholder="8.75"
           />
         </label>
@@ -276,7 +293,7 @@ export function AlbumForm({ album, onCancelEdit, onSave }: AlbumFormProps) {
             inputMode="decimal"
             value={formValues.consistencyRating}
             onChange={(event) =>
-              updateField("consistencyRating", event.target.value)
+              updateRatingField("consistencyRating", event.target.value)
             }
             placeholder="9"
           />
@@ -350,9 +367,7 @@ export function AlbumForm({ album, onCancelEdit, onSave }: AlbumFormProps) {
                   value={track.rating}
                   disabled={track.skipped}
                   onChange={(event) =>
-                    updateTrack(track.id, {
-                      rating: event.target.value,
-                    })
+                    updateTrackRating(track.id, event.target.value)
                   }
                   placeholder="8.5"
                   aria-label="Track rating"
@@ -404,6 +419,34 @@ function parseOptionalWholeNumber(value: string): number | "" {
   }
 
   return Math.max(0, Math.floor(parsedNumber));
+}
+
+function isAllowedRatingInput(value: string): boolean {
+  if (value === "") {
+    return true;
+  }
+
+  if (!/^\d{0,2}(?:\.\d{0,2})?$/.test(value)) {
+    return false;
+  }
+
+  const parsedValue = Number(value);
+
+  if (!Number.isFinite(parsedValue) || parsedValue > 11) {
+    return false;
+  }
+
+  const decimalPart = value.split(".")[1];
+
+  if (!decimalPart || decimalPart.length === 0) {
+    return true;
+  }
+
+  if (decimalPart.length === 1) {
+    return ["0", "2", "5", "7"].includes(decimalPart);
+  }
+
+  return ["00", "25", "50", "75"].includes(decimalPart);
 }
 
 function isReviewComplete(
