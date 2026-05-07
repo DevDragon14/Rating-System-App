@@ -29,6 +29,7 @@ This app turns a manual album-review spreadsheet into a small web app. The MVP l
 - CSV export downloads the current local album library.
 - CSV and XLSX import append albums to the current local library.
 - XLSX import reads the first worksheet.
+- Import ignores duplicate albums with the same artist, title, and year.
 - Import expects at least Artist and Album/Album Title columns.
 
 ## Where The Code Lives

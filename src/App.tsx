@@ -82,7 +82,23 @@ function App() {
   }
 
   function importAlbums(importedAlbums: Album[]) {
-    setAlbums((currentAlbums) => [...currentAlbums, ...importedAlbums]);
+    const knownAlbumKeys = new Set(albums.map(getAlbumImportKey));
+    let duplicateCount = 0;
+    const newAlbums = importedAlbums.filter((album) => {
+      const albumKey = getAlbumImportKey(album);
+
+      if (knownAlbumKeys.has(albumKey)) {
+        duplicateCount += 1;
+        return false;
+      }
+
+      knownAlbumKeys.add(albumKey);
+      return true;
+    });
+    const importedCount = newAlbums.length;
+
+    setAlbums((currentAlbums) => [...currentAlbums, ...newAlbums]);
+    return { importedCount, duplicateCount };
   }
 
   return (
@@ -176,6 +192,14 @@ function getEmptyMessage(activePage: Page): string {
   }
 
   return "No albums yet. Add the first one with the form.";
+}
+
+function getAlbumImportKey(album: Album): string {
+  return `${normalizeImportText(album.artist)}|${normalizeImportText(album.title)}|${album.year}`;
+}
+
+function normalizeImportText(value: string): string {
+  return value.trim().toLowerCase().replace(/\s+/g, " ");
 }
 
 export default App;

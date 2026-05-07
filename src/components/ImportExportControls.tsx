@@ -8,7 +8,10 @@ import type { Album } from "../types/album";
 
 type ImportExportControlsProps = {
   albums: Album[];
-  onImport: (albums: Album[]) => void;
+  onImport: (albums: Album[]) => {
+    importedCount: number;
+    duplicateCount: number;
+  };
 };
 
 export function ImportExportControls({
@@ -64,11 +67,15 @@ export function ImportExportControls({
           "No albums imported. Check that the spreadsheet has Artist and Album columns.",
         );
       } else {
-        onImport(result.albums);
+        const importResult = onImport(result.albums);
         setMessage(
-          `Imported ${result.albums.length} album${
-            result.albums.length === 1 ? "" : "s"
-          }. ${result.skippedRows} row${result.skippedRows === 1 ? "" : "s"} skipped.`,
+          `Imported ${importResult.importedCount} album${
+            importResult.importedCount === 1 ? "" : "s"
+          }. ${importResult.duplicateCount} duplicate${
+            importResult.duplicateCount === 1 ? "" : "s"
+          } ignored. ${result.skippedRows} row${
+            result.skippedRows === 1 ? "" : "s"
+          } skipped.`,
         );
       }
 
