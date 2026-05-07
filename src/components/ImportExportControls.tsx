@@ -1,5 +1,9 @@
 import { useRef, useState, type ChangeEvent } from "react";
-import { exportAlbumsToCsv, importAlbumsFromCsv } from "../data/albumCsv";
+import {
+  exportAlbumsToCsv,
+  importAlbumsFromCsv,
+  importAlbumsFromXlsx,
+} from "../data/albumCsv";
 import type { Album } from "../types/album";
 
 type ImportExportControlsProps = {
@@ -27,19 +31,23 @@ export function ImportExportControls({
     setMessage(`Exported ${albums.length} album${albums.length === 1 ? "" : "s"}.`);
   }
 
-  function chooseCsvFile() {
+  function chooseImportFile() {
     fileInputRef.current?.click();
   }
 
-  function importCsv(event: ChangeEvent<HTMLInputElement>) {
+  function importSpreadsheet(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
 
     if (!file) {
       return;
     }
 
-    if (!file.name.toLowerCase().endsWith(".csv")) {
-      setMessage("Please save the spreadsheet as CSV before importing.");
+    const fileName = file.name.toLowerCase();
+    const isCsv = fileName.endsWith(".csv");
+    const isXlsx = fileName.endsWith(".xlsx");
+
+    if (!isCsv && !isXlsx) {
+      setMessage("Please import a CSV or XLSX spreadsheet.");
       event.target.value = "";
       return;
     }
@@ -47,10 +55,14 @@ export function ImportExportControls({
     const reader = new FileReader();
 
     reader.onload = () => {
-      const result = importAlbumsFromCsv(String(reader.result ?? ""));
+      const result = isXlsx
+        ? importAlbumsFromXlsx(reader.result as ArrayBuffer)
+        : importAlbumsFromCsv(String(reader.result ?? ""));
 
       if (result.albums.length === 0) {
-        setMessage("No albums imported. Check that the CSV has Artist and Album columns.");
+        setMessage(
+          "No albums imported. Check that the spreadsheet has Artist and Album columns.",
+        );
       } else {
         onImport(result.albums);
         setMessage(
@@ -63,7 +75,11 @@ export function ImportExportControls({
       event.target.value = "";
     };
 
-    reader.readAsText(file);
+    if (isXlsx) {
+      reader.readAsArrayBuffer(file);
+    } else {
+      reader.readAsText(file);
+    }
   }
 
   return (
@@ -74,8 +90,8 @@ export function ImportExportControls({
       </div>
 
       <div className="import-export-actions">
-        <button type="button" onClick={chooseCsvFile}>
-          Import CSV
+        <button type="button" onClick={chooseImportFile}>
+          Import CSV/XLSX
         </button>
         <button type="button" onClick={exportCsv} disabled={albums.length === 0}>
           Export CSV
@@ -85,13 +101,13 @@ export function ImportExportControls({
       <input
         ref={fileInputRef}
         type="file"
-        accept=".csv,text/csv"
+        accept=".csv,.xlsx,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
         className="visually-hidden"
-        onChange={importCsv}
+        onChange={importSpreadsheet}
       />
 
       <p className="helper-text">
-        Import appends rows. XLSX files should be saved as CSV first.
+        Import appends rows from CSV or the first worksheet in an XLSX file.
       </p>
       {message && <p className="field-note">{message}</p>}
     </section>

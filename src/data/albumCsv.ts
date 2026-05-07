@@ -1,4 +1,5 @@
 import type { Album, ReviewStatus } from "../types/album";
+import * as XLSX from "xlsx";
 import {
   calculateOverallRating,
   ratingToPercentage,
@@ -51,7 +52,33 @@ export function exportAlbumsToCsv(albums: Album[]): string {
 
 export function importAlbumsFromCsv(csvText: string): CsvImportResult {
   const rows = parseCsv(csvText);
+  return importAlbumsFromRows(rows);
+}
 
+export function importAlbumsFromXlsx(fileData: ArrayBuffer): CsvImportResult {
+  const workbook = XLSX.read(fileData, { type: "array" });
+  const firstSheetName = workbook.SheetNames[0];
+
+  if (!firstSheetName) {
+    return { albums: [], skippedRows: 0 };
+  }
+
+  const sheet = workbook.Sheets[firstSheetName];
+  const rows = XLSX.utils.sheet_to_json<Array<string | number | boolean>>(
+    sheet,
+    {
+      header: 1,
+      raw: false,
+      blankrows: false,
+    },
+  );
+
+  return importAlbumsFromRows(
+    rows.map((row) => row.map((cell) => String(cell ?? ""))),
+  );
+}
+
+function importAlbumsFromRows(rows: string[][]): CsvImportResult {
   if (rows.length < 2) {
     return { albums: [], skippedRows: 0 };
   }
