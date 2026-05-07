@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { saveAlbums, loadAlbums } from "./data/albumStorage";
 import { AlbumForm } from "./components/AlbumForm";
 import { AlbumTable } from "./components/AlbumTable";
+import { ImportExportControls } from "./components/ImportExportControls";
 import { SearchAndSort } from "./components/SearchAndSort";
 import type { Album, SortKey } from "./types/album";
 import { calculateOverallRating, calculateSongRating } from "./utils/scoring";
@@ -44,7 +45,9 @@ function App() {
   }, [albums, activePage, searchText, sortKey]);
 
   function saveAlbum(albumToSave: Album) {
-    const songRating = calculateSongRating(albumToSave.tracks);
+    const calculatedSongRating = calculateSongRating(albumToSave.tracks);
+    const songRating =
+      calculatedSongRating === "" ? albumToSave.songRating : calculatedSongRating;
     const albumWithScores = {
       ...albumToSave,
       songRating,
@@ -78,6 +81,10 @@ function App() {
     }
   }
 
+  function importAlbums(importedAlbums: Album[]) {
+    setAlbums((currentAlbums) => [...currentAlbums, ...importedAlbums]);
+  }
+
   return (
     <main className="app-shell">
       <header className="app-header">
@@ -106,6 +113,7 @@ function App() {
         />
 
         <section className="table-area">
+          <ImportExportControls albums={albums} onImport={importAlbums} />
           <SearchAndSort
             searchText={searchText}
             sortKey={sortKey}

@@ -39,8 +39,9 @@ export function AlbumForm({ album, onCancelEdit, onSave }: AlbumFormProps) {
   const [formValues, setFormValues] = useState<AlbumFormValues>(blankForm);
   const [tracks, setTracks] = useState<TrackFormValues[]>([]);
   const [errorMessage, setErrorMessage] = useState("");
-  const canMarkReviewed = isReviewComplete(formValues, tracks);
-  const scorePreview = getScorePreview(formValues, tracks);
+  const savedSongRating = album?.songRating ?? "";
+  const canMarkReviewed = isReviewComplete(formValues, tracks, savedSongRating);
+  const scorePreview = getScorePreview(formValues, tracks, savedSongRating);
 
   useEffect(() => {
     if (!album) {
@@ -140,10 +141,11 @@ export function AlbumForm({ album, onCancelEdit, onSave }: AlbumFormProps) {
       formValues.status === "Reviewed" &&
       (gutRating === "" ||
         consistencyRating === "" ||
-        !cleanedTracks.some((track) => !track.skipped && typeof track.rating === "number"))
+        (!cleanedTracks.some((track) => !track.skipped && typeof track.rating === "number") &&
+          savedSongRating === ""))
     ) {
       setErrorMessage(
-        "Reviewed albums need Gut, Consistency, and at least one rated track.",
+        "Reviewed albums need Gut, Consistency, and either a Song Rating or at least one rated track.",
       );
       return;
     }
@@ -253,7 +255,7 @@ export function AlbumForm({ album, onCancelEdit, onSave }: AlbumFormProps) {
           </select>
           {!canMarkReviewed && (
             <span className="field-note">
-              Add Gut, Consistency, and at least one rated track to mark reviewed.
+              Add Gut, Consistency, and a Song Rating or rated track to mark reviewed.
             </span>
           )}
         </label>
@@ -411,6 +413,7 @@ function parseOptionalWholeNumber(value: string): number | "" {
 function isReviewComplete(
   formValues: AlbumFormValues,
   tracks: TrackFormValues[],
+  savedSongRating: number | "",
 ): boolean {
   const gutRating = parseOptionalRating(formValues.gutRating);
   const consistencyRating = parseOptionalRating(formValues.consistencyRating);
@@ -418,17 +421,19 @@ function isReviewComplete(
     const rating = parseOptionalRating(track.rating);
     return !track.skipped && typeof rating === "number";
   });
+  const hasSongRating = hasRatedTrack || savedSongRating !== "";
 
   return (
     typeof gutRating === "number" &&
     typeof consistencyRating === "number" &&
-    hasRatedTrack
+    hasSongRating
   );
 }
 
 function getScorePreview(
   formValues: AlbumFormValues,
   tracks: TrackFormValues[],
+  savedSongRating: number | "",
 ): ScorePreview {
   const gutRating = parseOptionalRating(formValues.gutRating);
   const consistencyRating = parseOptionalRating(formValues.consistencyRating);
@@ -449,7 +454,9 @@ function getScorePreview(
     };
   }
 
-  const songRating = calculateSongRating(parsedTracks as TrackRating[]);
+  const calculatedSongRating = calculateSongRating(parsedTracks as TrackRating[]);
+  const songRating =
+    calculatedSongRating === "" ? savedSongRating : calculatedSongRating;
   const overallRating = calculateOverallRating({
     gutRating,
     songRating,

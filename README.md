@@ -23,6 +23,13 @@ This app turns a manual album-review spreadsheet into a small web app. The MVP l
 - Percentages use 10 as the perfect-score baseline, so 8.5 is 85% and 11 is 110%.
 - Favorite is only for display and vinyl-buying guidance. It does not affect ranking.
 
+## Import And Export
+
+- CSV export downloads the current local album library.
+- CSV import appends albums to the current local library.
+- Import expects at least Artist and Album/Album Title columns.
+- XLSX files should be saved as CSV before importing in this MVP.
+
 ## Where The Code Lives
 
 - `src/types/album.ts` defines the album and track data shapes.
