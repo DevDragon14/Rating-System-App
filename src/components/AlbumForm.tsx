@@ -17,6 +17,12 @@ type TrackFormValues = Omit<TrackRating, "rating"> & {
   rating: string;
 };
 
+type ScorePreview = {
+  songRating: number | "";
+  overallRating: number | "";
+  hasInvalidRating: boolean;
+};
+
 const blankForm: AlbumFormValues = {
   artist: "",
   title: "",
@@ -423,7 +429,7 @@ function isReviewComplete(
 function getScorePreview(
   formValues: AlbumFormValues,
   tracks: TrackFormValues[],
-) {
+): ScorePreview {
   const gutRating = parseOptionalRating(formValues.gutRating);
   const consistencyRating = parseOptionalRating(formValues.consistencyRating);
   const parsedTracks = tracks.map((track) => ({
