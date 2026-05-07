@@ -272,11 +272,17 @@ th {
 }
 
 .toolbar {
+  flex-wrap: wrap;
   margin-bottom: 14px;
 }
 
 .toolbar label {
-  min-width: 180px;
+  flex: 1 1 160px;
+  min-width: 150px;
+}
+
+.toolbar label:first-child {
+  flex-basis: 220px;
 }
 
 .table-scroll {

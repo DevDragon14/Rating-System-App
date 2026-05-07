@@ -1,4 +1,7 @@
 export type ReviewStatus = "Planned" | "In Progress" | "Reviewed";
+export type StatusFilter = "All" | ReviewStatus;
+export type FavoriteFilter = "All" | "Favorites";
+export type YearFilter = "All" | number;
 
 export type TrackRating = {
   id: string;

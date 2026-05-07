@@ -4,7 +4,13 @@ import { AlbumForm } from "./components/AlbumForm";
 import { AlbumTable } from "./components/AlbumTable";
 import { ImportExportControls } from "./components/ImportExportControls";
 import { SearchAndSort } from "./components/SearchAndSort";
-import type { Album, SortKey } from "./types/album";
+import type {
+  Album,
+  FavoriteFilter,
+  SortKey,
+  StatusFilter,
+  YearFilter,
+} from "./types/album";
 import { calculateOverallRating, calculateSongRating } from "./utils/scoring";
 
 type Page = "library" | "rankings" | "queue";
@@ -15,6 +21,10 @@ function App() {
   const [activePage, setActivePage] = useState<Page>("library");
   const [searchText, setSearchText] = useState("");
   const [sortKey, setSortKey] = useState<SortKey>("overallRating");
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>("All");
+  const [favoriteFilter, setFavoriteFilter] = useState<FavoriteFilter>("All");
+  const [albumYearFilter, setAlbumYearFilter] = useState<YearFilter>("All");
+  const [reviewYearFilter, setReviewYearFilter] = useState<YearFilter>("All");
   const formAreaRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -22,6 +32,15 @@ function App() {
   }, [albums]);
 
   const editingAlbum = albums.find((album) => album.id === editingAlbumId);
+
+  const albumYears = useMemo(
+    () => getUniqueYears(albums, (album) => album.year),
+    [albums],
+  );
+  const reviewYears = useMemo(
+    () => getUniqueYears(albums, (album) => getYearFromDate(album.createdAt)),
+    [albums],
+  );
 
   const visibleAlbums = useMemo(() => {
     const normalizedSearch = searchText.trim().toLowerCase();
@@ -42,8 +61,35 @@ function App() {
       });
     }
 
+    if (statusFilter !== "All") {
+      pageAlbums = pageAlbums.filter((album) => album.status === statusFilter);
+    }
+
+    if (favoriteFilter === "Favorites") {
+      pageAlbums = pageAlbums.filter((album) => album.favorite);
+    }
+
+    if (albumYearFilter !== "All") {
+      pageAlbums = pageAlbums.filter((album) => album.year === albumYearFilter);
+    }
+
+    if (reviewYearFilter !== "All") {
+      pageAlbums = pageAlbums.filter(
+        (album) => getYearFromDate(album.createdAt) === reviewYearFilter,
+      );
+    }
+
     return sortAlbums(pageAlbums, sortKey);
-  }, [albums, activePage, searchText, sortKey]);
+  }, [
+    albums,
+    activePage,
+    searchText,
+    sortKey,
+    statusFilter,
+    favoriteFilter,
+    albumYearFilter,
+    reviewYearFilter,
+  ]);
 
   function saveAlbum(albumToSave: Album) {
     const calculatedSongRating = calculateSongRating(albumToSave.tracks);
@@ -160,8 +206,18 @@ function App() {
           <SearchAndSort
             searchText={searchText}
             sortKey={sortKey}
+            statusFilter={statusFilter}
+            favoriteFilter={favoriteFilter}
+            albumYearFilter={albumYearFilter}
+            reviewYearFilter={reviewYearFilter}
+            albumYears={albumYears}
+            reviewYears={reviewYears}
             onSearchChange={setSearchText}
             onSortChange={setSortKey}
+            onStatusFilterChange={setStatusFilter}
+            onFavoriteFilterChange={setFavoriteFilter}
+            onAlbumYearFilterChange={setAlbumYearFilter}
+            onReviewYearFilterChange={setReviewYearFilter}
           />
           <AlbumTable
             albums={visibleAlbums}
@@ -227,6 +283,27 @@ function getAlbumImportKey(album: Album): string {
 
 function normalizeImportText(value: string): string {
   return value.trim().toLowerCase().replace(/\s+/g, " ");
+}
+
+function getUniqueYears(
+  albums: Album[],
+  getYear: (album: Album) => number | "",
+): number[] {
+  const years = albums
+    .map(getYear)
+    .filter((year): year is number => typeof year === "number");
+
+  return [...new Set(years)].sort((first, second) => second - first);
+}
+
+function getYearFromDate(dateText: string): number | "" {
+  const date = new Date(dateText);
+
+  if (Number.isNaN(date.getTime())) {
+    return "";
+  }
+
+  return date.getFullYear();
 }
 
 export default App;
