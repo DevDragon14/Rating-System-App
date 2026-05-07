@@ -1,0 +1,361 @@
+import { useEffect, useState, type FormEvent } from "react";
+import type { Album, AlbumFormValues, ReviewStatus, TrackRating } from "../types/album";
+import { isValidRating } from "../utils/scoring";
+
+type AlbumFormProps = {
+  album?: Album;
+  onCancelEdit: () => void;
+  onSave: (album: Album) => void;
+};
+
+const blankForm: AlbumFormValues = {
+  artist: "",
+  title: "",
+  year: "",
+  ratedTrackCount: "",
+  officialTrackCount: "",
+  favorite: false,
+  status: "Planned",
+  gutRating: "",
+  consistencyRating: "",
+};
+
+export function AlbumForm({ album, onCancelEdit, onSave }: AlbumFormProps) {
+  const [formValues, setFormValues] = useState<AlbumFormValues>(blankForm);
+  const [tracks, setTracks] = useState<TrackRating[]>([]);
+  const [errorMessage, setErrorMessage] = useState("");
+
+  useEffect(() => {
+    if (!album) {
+      setFormValues(blankForm);
+      setTracks([]);
+      return;
+    }
+
+    setFormValues({
+      artist: album.artist,
+      title: album.title,
+      year: String(album.year),
+      ratedTrackCount: String(album.ratedTrackCount),
+      officialTrackCount: String(album.officialTrackCount),
+      favorite: album.favorite,
+      status: album.status,
+      gutRating: String(album.gutRating),
+      consistencyRating: String(album.consistencyRating),
+    });
+    setTracks(album.tracks);
+  }, [album]);
+
+  function updateField(field: keyof AlbumFormValues, value: string | boolean) {
+    setFormValues((currentValues) => ({
+      ...currentValues,
+      [field]: value,
+    }));
+  }
+
+  function updateTrack(trackId: string, updates: Partial<TrackRating>) {
+    setTracks((currentTracks) =>
+      currentTracks.map((track) =>
+        track.id === trackId ? { ...track, ...updates } : track,
+      ),
+    );
+  }
+
+  function addTrack() {
+    setTracks((currentTracks) => [
+      ...currentTracks,
+      {
+        id: createId(),
+        trackNumber: currentTracks.length + 1,
+        title: "",
+        rating: "",
+        skipped: false,
+      },
+    ]);
+  }
+
+  function removeTrack(trackId: string) {
+    setTracks((currentTracks) =>
+      currentTracks.filter((track) => track.id !== trackId),
+    );
+  }
+
+  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setErrorMessage("");
+
+    if (!formValues.artist.trim() || !formValues.title.trim()) {
+      setErrorMessage("Artist and album title are required.");
+      return;
+    }
+
+    const gutRating = parseOptionalRating(formValues.gutRating);
+    const consistencyRating = parseOptionalRating(formValues.consistencyRating);
+
+    if (gutRating === null || consistencyRating === null) {
+      setErrorMessage("Ratings must be between 1 and 11 in 0.25 steps.");
+      return;
+    }
+
+    const cleanedTracks = tracks.map((track) => ({
+      ...track,
+      title: track.title.trim(),
+      rating: track.skipped ? "" : track.rating,
+    }));
+
+    const hasInvalidTrackRating = cleanedTracks.some(
+      (track) =>
+        !track.skipped &&
+        typeof track.rating === "number" &&
+        !isValidRating(track.rating),
+    );
+
+    if (hasInvalidTrackRating) {
+      setErrorMessage("Track ratings must be between 1 and 11 in 0.25 steps.");
+      return;
+    }
+
+    const now = new Date().toISOString();
+
+    onSave({
+      id: album?.id ?? createId(),
+      artist: formValues.artist.trim(),
+      title: formValues.title.trim(),
+      year: parseOptionalWholeNumber(formValues.year),
+      ratedTrackCount: parseOptionalWholeNumber(formValues.ratedTrackCount),
+      officialTrackCount: parseOptionalWholeNumber(formValues.officialTrackCount),
+      favorite: formValues.favorite,
+      status: formValues.status,
+      gutRating,
+      songRating: album?.songRating ?? "",
+      consistencyRating,
+      overallRating: album?.overallRating ?? "",
+      tracks: cleanedTracks,
+      createdAt: album?.createdAt ?? now,
+      updatedAt: now,
+    });
+
+    setFormValues(blankForm);
+    setTracks([]);
+  }
+
+  return (
+    <form className="album-form" onSubmit={handleSubmit}>
+      <div className="form-heading">
+        <div>
+          <p className="eyebrow">{album ? "Editing" : "New album"}</p>
+          <h2>{album ? `${album.artist} - ${album.title}` : "Add album"}</h2>
+        </div>
+        {album && (
+          <button type="button" onClick={onCancelEdit}>
+            Cancel
+          </button>
+        )}
+      </div>
+
+      {errorMessage && <p className="error-message">{errorMessage}</p>}
+
+      <div className="field-grid">
+        <label>
+          Artist
+          <input
+            value={formValues.artist}
+            onChange={(event) => updateField("artist", event.target.value)}
+            placeholder="Nas"
+          />
+        </label>
+
+        <label>
+          Album title
+          <input
+            value={formValues.title}
+            onChange={(event) => updateField("title", event.target.value)}
+            placeholder="Illmatic"
+          />
+        </label>
+
+        <label>
+          Year
+          <input
+            inputMode="numeric"
+            value={formValues.year}
+            onChange={(event) => updateField("year", event.target.value)}
+            placeholder="1994"
+          />
+        </label>
+
+        <label>
+          Tracks rated
+          <input
+            inputMode="numeric"
+            value={formValues.ratedTrackCount}
+            onChange={(event) => updateField("ratedTrackCount", event.target.value)}
+            placeholder="10"
+          />
+        </label>
+
+        <label>
+          Official tracks
+          <input
+            inputMode="numeric"
+            value={formValues.officialTrackCount}
+            onChange={(event) => updateField("officialTrackCount", event.target.value)}
+            placeholder="10"
+          />
+        </label>
+
+        <label>
+          Review status
+          <select
+            value={formValues.status}
+            onChange={(event) =>
+              updateField("status", event.target.value as ReviewStatus)
+            }
+          >
+            <option value="Planned">Planned</option>
+            <option value="In Progress">In Progress</option>
+            <option value="Reviewed">Reviewed</option>
+          </select>
+        </label>
+
+        <label>
+          Gut rating
+          <input
+            inputMode="decimal"
+            value={formValues.gutRating}
+            onChange={(event) => updateField("gutRating", event.target.value)}
+            placeholder="8.75"
+          />
+        </label>
+
+        <label>
+          Consistency rating
+          <input
+            inputMode="decimal"
+            value={formValues.consistencyRating}
+            onChange={(event) =>
+              updateField("consistencyRating", event.target.value)
+            }
+            placeholder="9"
+          />
+        </label>
+      </div>
+
+      <label className="check-row">
+        <input
+          type="checkbox"
+          checked={formValues.favorite}
+          onChange={(event) => updateField("favorite", event.target.checked)}
+        />
+        Favorite for vinyl list
+      </label>
+
+      <section className="track-editor">
+        <div className="section-heading">
+          <h3>Track ratings</h3>
+          <button type="button" onClick={addTrack}>
+            Add track
+          </button>
+        </div>
+
+        {tracks.length === 0 ? (
+          <p className="helper-text">
+            Add tracks when you are ready. Skits and instrumentals can be marked skipped.
+          </p>
+        ) : (
+          <div className="track-list">
+            {tracks.map((track) => (
+              <div className="track-row" key={track.id}>
+                <input
+                  className="track-number"
+                  inputMode="numeric"
+                  value={track.trackNumber}
+                  onChange={(event) =>
+                    updateTrack(track.id, {
+                      trackNumber: Number(event.target.value) || track.trackNumber,
+                    })
+                  }
+                  aria-label="Track number"
+                />
+                <input
+                  value={track.title}
+                  onChange={(event) =>
+                    updateTrack(track.id, { title: event.target.value })
+                  }
+                  placeholder="Track title"
+                  aria-label="Track title"
+                />
+                <input
+                  className="track-rating"
+                  inputMode="decimal"
+                  value={track.rating}
+                  disabled={track.skipped}
+                  onChange={(event) =>
+                    updateTrack(track.id, {
+                      rating: parseTrackRatingInput(event.target.value),
+                    })
+                  }
+                  placeholder="8.5"
+                  aria-label="Track rating"
+                />
+                <label className="skip-check">
+                  <input
+                    type="checkbox"
+                    checked={track.skipped}
+                    onChange={(event) =>
+                      updateTrack(track.id, { skipped: event.target.checked })
+                    }
+                  />
+                  Skip
+                </label>
+                <button type="button" onClick={() => removeTrack(track.id)}>
+                  Remove
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
+
+      <button className="primary-action" type="submit">
+        {album ? "Save changes" : "Add album"}
+      </button>
+    </form>
+  );
+}
+
+function parseOptionalRating(value: string): number | "" | null {
+  if (value.trim() === "") {
+    return "";
+  }
+
+  const rating = Number(value);
+  return isValidRating(rating) ? rating : null;
+}
+
+function parseTrackRatingInput(value: string): number | "" {
+  if (value.trim() === "") {
+    return "";
+  }
+
+  const rating = Number(value);
+  return Number.isFinite(rating) ? rating : "";
+}
+
+function parseOptionalWholeNumber(value: string): number | "" {
+  if (value.trim() === "") {
+    return "";
+  }
+
+  const parsedNumber = Number(value);
+
+  if (!Number.isFinite(parsedNumber)) {
+    return "";
+  }
+
+  return Math.max(0, Math.floor(parsedNumber));
+}
+
+function createId(): string {
+  return window.crypto?.randomUUID?.() ?? String(Date.now());
+}
