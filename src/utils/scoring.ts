@@ -1,6 +1,7 @@
 import type { Album, TrackRating } from "../types/album";
 
 const RATING_STEP = 0.25;
+const PERFECT_RATING = 10;
 
 export function isValidRating(value: number): boolean {
   return value >= 1 && value <= 11 && Number.isInteger(value / RATING_STEP);
@@ -35,4 +36,12 @@ export function calculateOverallRating(album: Pick<Album, "gutRating" | "songRat
 
 export function roundToTwoDecimals(value: number): number {
   return Math.round(value * 100) / 100;
+}
+
+export function ratingToPercentage(value: number | ""): number | "" {
+  if (value === "") {
+    return "";
+  }
+
+  return roundToTwoDecimals((value / PERFECT_RATING) * 100);
 }

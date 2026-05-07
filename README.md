@@ -20,6 +20,7 @@ This app turns a manual album-review spreadsheet into a small web app. The MVP l
 - Skipped tracks do not count toward the song rating.
 - Song Rating is the average of rated tracks only.
 - Overall Rating is the equal-weight average of Gut Rating, Song Rating, and Consistency Rating.
+- Percentages use 10 as the perfect-score baseline, so 8.5 is 85% and 11 is 110%.
 - Favorite is only for display and vinyl-buying guidance. It does not affect ranking.
 
 ## Where The Code Lives

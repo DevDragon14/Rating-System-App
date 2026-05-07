@@ -1,4 +1,5 @@
 import type { Album } from "../types/album";
+import { ratingToPercentage } from "../utils/scoring";
 
 type AlbumTableProps = {
   albums: Album[];
@@ -31,6 +32,7 @@ export function AlbumTable({
             <th>Song</th>
             <th>Consistency</th>
             <th>Overall</th>
+            <th>Overall %</th>
             <th>Status</th>
             <th>Favorite</th>
             <th>Actions</th>
@@ -51,6 +53,7 @@ export function AlbumTable({
               <td>{formatRating(album.songRating)}</td>
               <td>{formatRating(album.consistencyRating)}</td>
               <td className="score">{formatRating(album.overallRating)}</td>
+              <td className="score">{formatPercentage(album.overallRating)}</td>
               <td>{album.status}</td>
               <td>{album.favorite ? "Yes" : "No"}</td>
               <td>
@@ -71,4 +74,9 @@ export function AlbumTable({
 
 function formatRating(value: number | ""): string {
   return value === "" ? "-" : value.toFixed(2);
+}
+
+function formatPercentage(value: number | ""): string {
+  const percentage = ratingToPercentage(value);
+  return percentage === "" ? "-" : `${percentage.toFixed(2)}%`;
 }
