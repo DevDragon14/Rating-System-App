@@ -8,6 +8,10 @@ type AlbumFormProps = {
   onSave: (album: Album) => void;
 };
 
+type TrackFormValues = Omit<TrackRating, "rating"> & {
+  rating: string;
+};
+
 const blankForm: AlbumFormValues = {
   artist: "",
   title: "",
@@ -22,7 +26,7 @@ const blankForm: AlbumFormValues = {
 
 export function AlbumForm({ album, onCancelEdit, onSave }: AlbumFormProps) {
   const [formValues, setFormValues] = useState<AlbumFormValues>(blankForm);
-  const [tracks, setTracks] = useState<TrackRating[]>([]);
+  const [tracks, setTracks] = useState<TrackFormValues[]>([]);
   const [errorMessage, setErrorMessage] = useState("");
 
   useEffect(() => {
@@ -43,7 +47,12 @@ export function AlbumForm({ album, onCancelEdit, onSave }: AlbumFormProps) {
       gutRating: String(album.gutRating),
       consistencyRating: String(album.consistencyRating),
     });
-    setTracks(album.tracks);
+    setTracks(
+      album.tracks.map((track) => ({
+        ...track,
+        rating: track.rating === "" ? "" : String(track.rating),
+      })),
+    );
   }, [album]);
 
   function updateField(field: keyof AlbumFormValues, value: string | boolean) {
@@ -53,7 +62,7 @@ export function AlbumForm({ album, onCancelEdit, onSave }: AlbumFormProps) {
     }));
   }
 
-  function updateTrack(trackId: string, updates: Partial<TrackRating>) {
+  function updateTrack(trackId: string, updates: Partial<TrackFormValues>) {
     setTracks((currentTracks) =>
       currentTracks.map((track) =>
         track.id === trackId ? { ...track, ...updates } : track,
@@ -97,23 +106,22 @@ export function AlbumForm({ album, onCancelEdit, onSave }: AlbumFormProps) {
       return;
     }
 
-    const cleanedTracks = tracks.map((track) => ({
-      ...track,
-      title: track.title.trim(),
-      rating: track.skipped ? "" : track.rating,
-    }));
+    const parsedTracks = tracks.map((track) => {
+      const rating = track.skipped ? "" : parseOptionalRating(track.rating);
 
-    const hasInvalidTrackRating = cleanedTracks.some(
-      (track) =>
-        !track.skipped &&
-        typeof track.rating === "number" &&
-        !isValidRating(track.rating),
-    );
+      return {
+        ...track,
+        title: track.title.trim(),
+        rating,
+      };
+    });
 
-    if (hasInvalidTrackRating) {
+    if (parsedTracks.some((track) => track.rating === null)) {
       setErrorMessage("Track ratings must be between 1 and 11 in 0.25 steps.");
       return;
     }
+
+    const cleanedTracks = parsedTracks as TrackRating[];
 
     const now = new Date().toISOString();
 
@@ -292,7 +300,7 @@ export function AlbumForm({ album, onCancelEdit, onSave }: AlbumFormProps) {
                   disabled={track.skipped}
                   onChange={(event) =>
                     updateTrack(track.id, {
-                      rating: parseTrackRatingInput(event.target.value),
+                      rating: event.target.value,
                     })
                   }
                   placeholder="8.5"
@@ -331,15 +339,6 @@ function parseOptionalRating(value: string): number | "" | null {
 
   const rating = Number(value);
   return isValidRating(rating) ? rating : null;
-}
-
-function parseTrackRatingInput(value: string): number | "" {
-  if (value.trim() === "") {
-    return "";
-  }
-
-  const rating = Number(value);
-  return Number.isFinite(rating) ? rating : "";
 }
 
 function parseOptionalWholeNumber(value: string): number | "" {
