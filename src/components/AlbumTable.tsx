@@ -40,21 +40,23 @@ export function AlbumTable({
         <tbody>
           {albums.map((album, index) => (
             <tr key={album.id}>
-              <td>{album.overallRating === "" ? "-" : index + 1}</td>
-              <td>{album.artist}</td>
-              <td>{album.title}</td>
-              <td>{album.year || "-"}</td>
-              <td>
+              <td data-label="Rank">{album.overallRating === "" ? "-" : index + 1}</td>
+              <td data-label="Artist">{album.artist}</td>
+              <td data-label="Album">{album.title}</td>
+              <td data-label="Year">{album.year || "-"}</td>
+              <td data-label="Tracks">
                 {album.ratedTrackCount || "-"}
                 {album.officialTrackCount ? ` (${album.officialTrackCount})` : ""}
               </td>
-              <td>{formatRatingPercentage(album.gutRating)}</td>
-              <td>{formatRatingPercentage(album.songRating)}</td>
-              <td>{formatRatingPercentage(album.consistencyRating)}</td>
-              <td className="score">{formatRatingPercentage(album.overallRating)}</td>
-              <td>{album.status}</td>
-              <td>{album.favorite ? "Yes" : "No"}</td>
-              <td>
+              <td data-label="Gut %">{formatRatingPercentage(album.gutRating)}</td>
+              <td data-label="Song %">{formatRatingPercentage(album.songRating)}</td>
+              <td data-label="Consistency %">{formatRatingPercentage(album.consistencyRating)}</td>
+              <td className="score" data-label="Overall %">
+                {formatRatingPercentage(album.overallRating)}
+              </td>
+              <td data-label="Status">{album.status}</td>
+              <td data-label="Favorite">{album.favorite ? "Yes" : "No"}</td>
+              <td data-label="Actions">
                 <div className="action-row">
                   <button onClick={() => onEdit(album.id)}>Edit</button>
                   <button className="danger" onClick={() => onDelete(album.id)}>
