@@ -1,7 +1,6 @@
 import type { Album, ReviewStatus } from "../types/album";
 import {
   calculateOverallRating,
-  isValidRating,
   ratingToPercentage,
 } from "../utils/scoring";
 
@@ -83,7 +82,7 @@ function albumFromRow(headers: string[], row: string[]): Album | null {
 
   const now = new Date().toISOString();
   const trackCounts = parseTrackCounts(
-    getField(headers, row, ["trackcount", "tracks", "tracksrated"]),
+    getField(headers, row, ["trackcount", "tracks", "tracksrated", "oftracks"]),
   );
   const ratedTrackCount =
     parseOptionalWholeNumber(getField(headers, row, ["tracksrated", "ratedtracks"])) ||
@@ -106,7 +105,7 @@ function albumFromRow(headers: string[], row: string[]): Album | null {
   const importedOverall = parseOptionalScore(
     getField(headers, row, ["overallrating", "overall"]),
   );
-  const overallRating = calculatedOverall || importedOverall;
+  const overallRating = importedOverall || calculatedOverall;
 
   return {
     id: createId(),
@@ -115,7 +114,9 @@ function albumFromRow(headers: string[], row: string[]): Album | null {
     year: parseOptionalWholeNumber(getField(headers, row, ["year"])),
     ratedTrackCount,
     officialTrackCount,
-    favorite: parseBoolean(getField(headers, row, ["favorite", "favourite"])),
+    favorite: parseBoolean(
+      getField(headers, row, ["favorite", "favourite", "favoritex"]),
+    ),
     status: parseStatus(getField(headers, row, ["reviewstatus", "status"]), {
       gutRating,
       songRating,
@@ -202,22 +203,38 @@ function parseTrackCounts(value: string): {
 }
 
 function parseOptionalRating(value: string): number | "" {
-  if (value.trim() === "") {
-    return "";
-  }
-
-  const parsedValue = Number(value);
-  return Number.isFinite(parsedValue) && isValidRating(parsedValue)
-    ? parsedValue
-    : "";
+  return parseOptionalScore(value);
 }
 
 function parseOptionalScore(value: string): number | "" {
-  if (value.trim() === "") {
+  const trimmedValue = value.trim();
+
+  if (trimmedValue === "") {
     return "";
   }
 
-  const parsedValue = Number(value);
+  const percentageMatch = trimmedValue.match(/(\d+(?:\.\d+)?)\s*%/);
+
+  if (percentageMatch) {
+    const percentageValue = Number(percentageMatch[1]);
+    const ratingValue = percentageValue / 10;
+
+    return Number.isFinite(ratingValue) && ratingValue >= 1 && ratingValue <= 11
+      ? ratingValue
+      : "";
+  }
+
+  const fractionMatch = trimmedValue.match(/(\d+(?:\.\d+)?)\s*\/\s*10/);
+
+  if (fractionMatch) {
+    const ratingValue = Number(fractionMatch[1]);
+
+    return Number.isFinite(ratingValue) && ratingValue >= 1 && ratingValue <= 11
+      ? ratingValue
+      : "";
+  }
+
+  const parsedValue = Number(trimmedValue);
   return Number.isFinite(parsedValue) && parsedValue >= 1 && parsedValue <= 11
     ? parsedValue
     : "";
@@ -233,7 +250,7 @@ function parseOptionalWholeNumber(value: string): number | "" {
 }
 
 function parseBoolean(value: string): boolean {
-  return ["true", "yes", "y", "1", "favorite"].includes(
+  return ["true", "yes", "y", "1", "favorite", "x"].includes(
     value.trim().toLowerCase(),
   );
 }
