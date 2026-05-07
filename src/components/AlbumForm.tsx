@@ -1,6 +1,11 @@
 import { useEffect, useState, type FormEvent } from "react";
 import type { Album, AlbumFormValues, ReviewStatus, TrackRating } from "../types/album";
-import { isValidRating } from "../utils/scoring";
+import {
+  calculateOverallRating,
+  calculateSongRating,
+  isValidRating,
+  ratingToPercentage,
+} from "../utils/scoring";
 
 type AlbumFormProps = {
   album?: Album;
@@ -29,6 +34,7 @@ export function AlbumForm({ album, onCancelEdit, onSave }: AlbumFormProps) {
   const [tracks, setTracks] = useState<TrackFormValues[]>([]);
   const [errorMessage, setErrorMessage] = useState("");
   const canMarkReviewed = isReviewComplete(formValues, tracks);
+  const scorePreview = getScorePreview(formValues, tracks);
 
   useEffect(() => {
     if (!album) {
@@ -278,6 +284,27 @@ export function AlbumForm({ album, onCancelEdit, onSave }: AlbumFormProps) {
         Favorite for vinyl list
       </label>
 
+      <section className="score-preview" aria-label="Live score preview">
+        <div>
+          <span>Song</span>
+          <strong>{formatRating(scorePreview.songRating)}</strong>
+        </div>
+        <div>
+          <span>Overall</span>
+          <strong>{formatRating(scorePreview.overallRating)}</strong>
+        </div>
+        <div>
+          <span>Overall %</span>
+          <strong>{formatPercentage(scorePreview.overallRating)}</strong>
+        </div>
+      </section>
+
+      {scorePreview.hasInvalidRating && (
+        <p className="field-note">
+          Preview updates after ratings use the 1 to 11 scale in 0.25 steps.
+        </p>
+      )}
+
       <section className="track-editor">
         <div className="section-heading">
           <h3>Track ratings</h3>
@@ -391,6 +418,52 @@ function isReviewComplete(
     typeof consistencyRating === "number" &&
     hasRatedTrack
   );
+}
+
+function getScorePreview(
+  formValues: AlbumFormValues,
+  tracks: TrackFormValues[],
+) {
+  const gutRating = parseOptionalRating(formValues.gutRating);
+  const consistencyRating = parseOptionalRating(formValues.consistencyRating);
+  const parsedTracks = tracks.map((track) => ({
+    ...track,
+    rating: track.skipped ? "" : parseOptionalRating(track.rating),
+  }));
+
+  if (
+    gutRating === null ||
+    consistencyRating === null ||
+    parsedTracks.some((track) => track.rating === null)
+  ) {
+    return {
+      songRating: "",
+      overallRating: "",
+      hasInvalidRating: true,
+    };
+  }
+
+  const songRating = calculateSongRating(parsedTracks as TrackRating[]);
+  const overallRating = calculateOverallRating({
+    gutRating,
+    songRating,
+    consistencyRating,
+  });
+
+  return {
+    songRating,
+    overallRating,
+    hasInvalidRating: false,
+  };
+}
+
+function formatRating(value: number | ""): string {
+  return value === "" ? "-" : value.toFixed(2);
+}
+
+function formatPercentage(value: number | ""): string {
+  const percentage = ratingToPercentage(value);
+  return percentage === "" ? "-" : `${percentage.toFixed(2)}%`;
 }
 
 function createId(): string {

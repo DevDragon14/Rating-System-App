@@ -170,6 +170,37 @@ th {
   padding-top: 16px;
 }
 
+.score-preview {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  border-top: 1px solid #e4ded4;
+  margin-top: 14px;
+  padding-top: 14px;
+}
+
+.score-preview div {
+  border: 1px solid #e4ded4;
+  border-radius: 6px;
+  background: #fffefa;
+  padding: 10px;
+}
+
+.score-preview span {
+  display: block;
+  color: #706b64;
+  font-size: 0.76rem;
+  font-weight: 800;
+  margin-bottom: 4px;
+  text-transform: uppercase;
+}
+
+.score-preview strong {
+  display: block;
+  color: #1d1d1f;
+  font-size: 1.2rem;
+}
+
 .track-list {
   display: grid;
   gap: 10px;
@@ -276,7 +307,8 @@ th {
   }
 
   .field-grid,
-  .track-row {
+  .track-row,
+  .score-preview {
     grid-template-columns: 1fr;
   }
 }
