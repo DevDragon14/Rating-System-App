@@ -13,7 +13,7 @@ export function averageRatings(ratings: number[]): number | "" {
   }
 
   const total = ratings.reduce((sum, rating) => sum + rating, 0);
-  return roundToTwoDecimals(total / ratings.length);
+  return roundToThreeDecimals(total / ratings.length);
 }
 
 export function calculateSongRating(tracks: TrackRating[]): number | "" {
@@ -38,10 +38,19 @@ export function roundToTwoDecimals(value: number): number {
   return Math.round(value * 100) / 100;
 }
 
+export function roundToThreeDecimals(value: number): number {
+  return Math.round(value * 1000) / 1000;
+}
+
 export function ratingToPercentage(value: number | ""): number | "" {
   if (value === "") {
     return "";
   }
 
   return roundToTwoDecimals((value / PERFECT_RATING) * 100);
+}
+
+export function formatRatingPercentage(value: number | ""): string {
+  const percentage = ratingToPercentage(value);
+  return percentage === "" ? "-" : `${percentage.toFixed(2)}%`;
 }

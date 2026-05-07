@@ -204,7 +204,7 @@ th {
 
 .score-preview {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
   border-top: 1px solid #e4ded4;
   margin-top: 14px;

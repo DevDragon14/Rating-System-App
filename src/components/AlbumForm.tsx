@@ -3,8 +3,8 @@ import type { Album, AlbumFormValues, ReviewStatus, TrackRating } from "../types
 import {
   calculateOverallRating,
   calculateSongRating,
+  formatRatingPercentage,
   isValidRating,
-  ratingToPercentage,
 } from "../utils/scoring";
 
 type AlbumFormProps = {
@@ -294,16 +294,12 @@ export function AlbumForm({ album, onCancelEdit, onSave }: AlbumFormProps) {
 
       <section className="score-preview" aria-label="Live score preview">
         <div>
-          <span>Song</span>
-          <strong>{formatRating(scorePreview.songRating)}</strong>
-        </div>
-        <div>
-          <span>Overall</span>
-          <strong>{formatRating(scorePreview.overallRating)}</strong>
+          <span>Song %</span>
+          <strong>{formatRatingPercentage(scorePreview.songRating)}</strong>
         </div>
         <div>
           <span>Overall %</span>
-          <strong>{formatPercentage(scorePreview.overallRating)}</strong>
+          <strong>{formatRatingPercentage(scorePreview.overallRating)}</strong>
         </div>
       </section>
 
@@ -468,15 +464,6 @@ function getScorePreview(
     overallRating,
     hasInvalidRating: false,
   };
-}
-
-function formatRating(value: number | ""): string {
-  return value === "" ? "-" : value.toFixed(2);
-}
-
-function formatPercentage(value: number | ""): string {
-  const percentage = ratingToPercentage(value);
-  return percentage === "" ? "-" : `${percentage.toFixed(2)}%`;
 }
 
 function createId(): string {
