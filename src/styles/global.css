@@ -373,15 +373,16 @@ th {
     border: 1px solid #e4ded4;
     border-radius: 8px;
     background: #fffefa;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     overflow: hidden;
   }
 
   td {
-    align-items: center;
     border-bottom: 1px solid #eee7dc;
     display: grid;
-    gap: 10px;
-    grid-template-columns: minmax(96px, 40%) minmax(0, 1fr);
+    gap: 4px;
+    grid-template-columns: 1fr;
     min-height: 42px;
     overflow-wrap: anywhere;
     padding: 9px 10px;
@@ -395,7 +396,50 @@ th {
     text-transform: uppercase;
   }
 
-  td:last-child {
+  .rank-cell,
+  .artist-cell,
+  .album-cell,
+  .actions-cell {
+    grid-column: 1 / -1;
+  }
+
+  .rank-cell {
+    background: #252527;
+    color: #fffefa;
+    font-size: 0.95rem;
+    font-weight: 800;
+  }
+
+  .rank-cell::before {
+    color: #d8d2c8;
+  }
+
+  .artist-cell {
+    border-bottom: 0;
+    font-size: 0.95rem;
+    padding-bottom: 4px;
+  }
+
+  .album-cell {
+    font-size: 1.05rem;
+    font-weight: 800;
+    padding-top: 4px;
+  }
+
+  .score-cell {
+    background: #fbf8f1;
+  }
+
+  .overall-cell {
+    background: #f3ede1;
+  }
+
+  .meta-cell,
+  .score-cell {
+    min-height: 58px;
+  }
+
+  .actions-cell {
     border-bottom: 0;
   }
 
