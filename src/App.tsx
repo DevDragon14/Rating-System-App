@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { saveAlbums, loadAlbums } from "./data/albumStorage";
 import { AlbumForm } from "./components/AlbumForm";
 import { AlbumTable } from "./components/AlbumTable";
@@ -15,6 +15,7 @@ function App() {
   const [activePage, setActivePage] = useState<Page>("library");
   const [searchText, setSearchText] = useState("");
   const [sortKey, setSortKey] = useState<SortKey>("overallRating");
+  const formAreaRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     saveAlbums(albums);
@@ -81,6 +82,13 @@ function App() {
     }
   }
 
+  function editAlbum(albumId: string) {
+    setEditingAlbumId(albumId);
+    window.requestAnimationFrame(() => {
+      formAreaRef.current?.scrollIntoView({ block: "start", behavior: "smooth" });
+    });
+  }
+
   function importAlbums(importedAlbums: Album[]) {
     const knownAlbumKeys = new Set(albums.map(getAlbumImportKey));
     let duplicateCount = 0;
@@ -135,11 +143,13 @@ function App() {
       </header>
 
       <section className="workspace">
-        <AlbumForm
-          album={editingAlbum}
-          onCancelEdit={() => setEditingAlbumId(null)}
-          onSave={saveAlbum}
-        />
+        <div ref={formAreaRef}>
+          <AlbumForm
+            album={editingAlbum}
+            onCancelEdit={() => setEditingAlbumId(null)}
+            onSave={saveAlbum}
+          />
+        </div>
 
         <section className="table-area">
           <ImportExportControls
@@ -157,7 +167,7 @@ function App() {
             albums={visibleAlbums}
             emptyMessage={getEmptyMessage(activePage)}
             onDelete={deleteAlbum}
-            onEdit={setEditingAlbumId}
+            onEdit={editAlbum}
           />
         </section>
       </section>
