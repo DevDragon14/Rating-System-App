@@ -8,6 +8,7 @@ import type { Album } from "../types/album";
 
 type ImportExportControlsProps = {
   albums: Album[];
+  onClearLibrary: () => void;
   onImport: (albums: Album[]) => {
     importedCount: number;
     duplicateCount: number;
@@ -16,6 +17,7 @@ type ImportExportControlsProps = {
 
 export function ImportExportControls({
   albums,
+  onClearLibrary,
   onImport,
 }: ImportExportControlsProps) {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -102,6 +104,14 @@ export function ImportExportControls({
         </button>
         <button type="button" onClick={exportCsv} disabled={albums.length === 0}>
           Export CSV
+        </button>
+        <button
+          className="danger"
+          type="button"
+          onClick={onClearLibrary}
+          disabled={albums.length === 0}
+        >
+          Clear Library
         </button>
       </div>
 

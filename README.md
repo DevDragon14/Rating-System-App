@@ -31,6 +31,7 @@ This app turns a manual album-review spreadsheet into a small web app. The MVP l
 - XLSX import reads the first worksheet.
 - Import ignores duplicate albums with the same artist, title, and year.
 - Import expects at least Artist and Album/Album Title columns.
+- Clear Library removes this browser's saved albums after confirmation.
 
 ## Where The Code Lives
 

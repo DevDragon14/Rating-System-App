@@ -101,6 +101,19 @@ function App() {
     return { importedCount, duplicateCount };
   }
 
+  function clearLibrary() {
+    const confirmed = window.confirm(
+      "Clear all saved albums from this browser? Export a CSV first if you want a backup.",
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    setAlbums([]);
+    setEditingAlbumId(null);
+  }
+
   return (
     <main className="app-shell">
       <header className="app-header">
@@ -129,7 +142,11 @@ function App() {
         />
 
         <section className="table-area">
-          <ImportExportControls albums={albums} onImport={importAlbums} />
+          <ImportExportControls
+            albums={albums}
+            onClearLibrary={clearLibrary}
+            onImport={importAlbums}
+          />
           <SearchAndSort
             searchText={searchText}
             sortKey={sortKey}
